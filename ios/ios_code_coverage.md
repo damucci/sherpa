@@ -2,7 +2,7 @@
 This setup is for both your Pull Request Jenkins projects as well as your main OTA build, as the process is identical for these two configurations.
 
 # Setup Jenkins
-Following either the Pull Request template found [here](http://ci.intrepid.io:8080/view/Templates/job/ios-pull-request-template/) or the OTA template found [here](http://ci.intrepid.io:8080/view/Templates/job/ios-template/), ensuring code coverage is reported for your iOS projects is straight forward.
+Following either the Pull Request template found [here](https://ci.intrepid.io/view/Templates/job/ios-pull-request-template/) or the OTA template found [here](https://ci.intrepid.io/view/Templates/job/ios-template/), ensuring code coverage is reported for your iOS projects is straight forward.
 
 ## Using [Scan](https://github.com/fastlane/fastlane/tree/master/scan) To Run Test
 You should have a section of code in your 'Execute Shell' Build Phase within your Jenkins project that looks like this:
