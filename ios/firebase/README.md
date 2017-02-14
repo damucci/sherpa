@@ -34,26 +34,9 @@ let handle = ref.observe(.value, with: { snapshot in
 
 ### Querying
 
-Firebase provides a series of query methods that allow you to filter, order, and limit the data that is retrieved.
+Firebase provides a series of query methods that allow you to [filter, order, and limit] (https://firebase.google.com/docs/database/ios/lists-of-data#sorting_and_filtering_data) the data that is retrieved.
 
-```swift
-func queryStarting(atValue startValue: Any?) -> FIRDatabaseQuery
-func queryStarting(atValue startValue: Any?, childKey: String?) -> FIRDatabaseQuery
-func queryEnding(atValue endValue: Any?) -> FIRDatabaseQuery
-func queryEnding(atValue endValue: Any?, childKey: String?) -> FIRDatabaseQuery
-func queryEqual(toValue value: Any?) -> FIRDatabaseQuery
-func queryEqual(toValue value: Any?, childKey: String?) -> FIRDatabaseQuery
-
-func queryOrdered(byChild key: String) -> FIRDatabaseQuery
-func queryOrderedByKey() -> FIRDatabaseQuery
-func queryOrderedByValue() -> FIRDatabaseQuery
-func queryOrderedByPriority() -> FIRDatabaseQuery
-
-func queryLimited(toFirst limit: UInt) -> FIRDatabaseQuery
-func queryLimited(toLast limit: UInt) -> FIRDatabaseQuery
-```
-
-For example, in a blogging app, if I wanted to get retrieve the last 5 blog posts about cooking, I would use a query like this:
+For example, in a blogging app, if you wanted to get retrieve the last 5 blog posts about cooking, you would use a query like this:
 
 ```swift
 let ref = FIRDatabase.database().reference().child("blog_posts")
@@ -62,7 +45,7 @@ let query = ref.queryOrdered(byChild: "post_date")
                .queryLimited(toLast: 5)
 
 query.observeSingleEvent(of: .value, with: { snapshot in
-    print("Results: ", snapshot)
+    // async callback logic
 })
 ```
 
@@ -86,7 +69,7 @@ let query1 = ref.queryOrdered(byChild: "post_date")
 
 #### Gotchas
 
-* You can combine a single `StartingAt` and single `EndingAt` filter, or you can use a single `EqualTo` filter. Any other attempt at combining filters will result in a runtime exception. If you need to filter any further, you'll need to bake the desired filtering into the structure of the data. For example, if I wanted to retrieve the last 5 cooking blog posts that only a specific user posed, I would group posts under user specific nodes.
+* You can combine a single `StartingAt` and single `EndingAt` filter, or you can use a single `EqualTo` filter. Any other attempt at combining filters will result in a runtime exception. If you need to filter any further, you'll need to bake the desired filtering into the structure of the data. For example, if you wanted to retrieve the last 5 cooking blog posts that only a specific user posted, you would have to group posts under user-specific nodes.
 
 ```swift
 let ref = FIRDatabase.database().reference().child("blog_posts").child(userIdentifier)
@@ -97,11 +80,55 @@ let query = ref.queryOrdered(byChild: "post_date")
 
 * You can only use a single `OrderBy` modifier or else you will get a runtime exception. Any additional ordering will need to be done locally.
 * You can only use a single `LimitedTo` modifier or else you will get a runtime exception, though, its difficult to imagine when you would want to.
+* TODO: Querying/Paging breaks with database persistence enabled
 
 ### Updating Remote Resources
 
 ```swift
+let ref = FIRDatabase.database().reference().child("characters")
+ref.updateChildValues([
+    "Luke" : [
+        "homeworld": "Tatooine",
+        "species" : "human"
+    ]
+], withCompletionBlock: { (error, reference) in
+    // Async update complete
+})
 ```
+
+```swift
+let ref = FIRDatabase.database().reference()
+ref.updateChildValues([
+    "characters/Luke/groups/rebels"  : true ,
+    "groups/rebels/members/Luke": true
+], withCompletionBlock: { (error, reference) in
+    // Async update complete
+})
+```
+
+```swift
+let ref = FIRDatabase.database().reference().child("affiliations")
+ref.runTransactionBlock({ data -> FIRTransactionResult in
+    guard let value = data.value as? NSMutableDictionary else { return .success(withValue: data) }
+
+    if let post = posts["rebels"] as? NSMutableDictionary {
+        if let likes = post["likes"] as? Int {
+            post["likes"] = likes + 1
+        } else {
+            post["likes"] = 1
+        }
+    }
+    data.value = value
+    return .success(withValue: data)
+}, andCompletionBlock: { (error, success, reference) in
+    // Async update complete
+})
+```
+
+#### Gotchas
+
+* Neither `updateChildValues` nor `runTransactionBlock` requests timeout when the device has no network connectivity. Instead, they update the local store immediately, triggering observer callbacks. Contrastingly, update completion callbacks do not get triggered until their request updates the server.
+* When database persistence is enabled, `updateChildValues` requests get cached across app launches, without their completion blocks, while waiting for network connectivity. Conversely, `runTransactionBlock` requests do not persist, resulting in Firebase advising you not to use them when database persistence is enabled.
 
 ### Database Persistence
 
