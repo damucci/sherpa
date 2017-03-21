@@ -26,9 +26,6 @@ Development best practices for Intrepid
 ### Maintenance Readme Template
 Projects repos should always contain a README so that future development teams can learn about processes/specific quirks that have to do with individual projects. See the template [here](readme-template.md).
 
-## Advice
-* [Mobile API Guidance](mobile_api_guidance.md)
-
 ## Resources
 * [iOS Resources](ios/README.md)
 * [iOS Build Reporting On Jenkins Via Danger](ios/ios_danger.md)
